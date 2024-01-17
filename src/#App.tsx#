@@ -1,0 +1,120 @@
+import React,{useRef, useState, useEffect} from 'react';
+import logo from './logo.svg';
+import { Box, Container, Table, Paper } from '@mantine/core';
+import { Button, SegmentedControl } from '@mantine/core';
+import { Oturum,useGetPostsQuery } from './app/services/users'
+import axios, {isCancel, AxiosError} from 'axios';
+import { useFetch } from 'usehooks-ts'
+
+import moment from 'moment-timezone';
+import 'moment/locale/tr';
+
+console.log(moment.locale()); // en
+moment.locale("tr");
+
+type SegmentedControlItem = { label : string, value: string }
+type StateTip<T> = React.Dispatch<React.SetStateAction<T>>
+type SegmentedControl = { label : string, value: string, renk:string } | null
+
+
+export type Salon = {
+	id : string,
+	salonAdi : string,
+	kapasite : number
+} | null
+export type Oturumm = {
+	id : string;
+   	gun: number ;
+   	ay : number;
+   	yil : number;
+   	saat : number;
+   	dakika : number;
+} | null
+
+export type Tablo = {
+	salonlar : Salon[] | null;
+	oturumlar : Oturumm[] | null;
+}
+const elements = [
+  { position: 6, mass: 12.011, symbol: 'C', name: 'Carbon' },
+  { position: 7, mass: 14.007, symbol: 'N', name: 'Nitrogen' },
+  { position: 39, mass: 88.906, symbol: 'Y', name: 'Yttrium' },
+  { position: 56, mass: 137.33, symbol: 'Ba', name: 'Barium' },
+  { position: 58, mass: 140.12, symbol: 'Ce', name: 'Cerium' },
+];
+
+function App() {
+  const ref = useRef<null | HTMLTableElement>(null)
+
+  const { data, error } = useFetch<Tablo>('http://localhost:3000/users')
+  console.log(data, error)
+
+const [bolumler, setBolumler] = useState<SegmentedControl[]>([{label:'', value:'', renk:''}]);
+const [bolum, setBolum] = useState<string>('')
+const [renk, setRenk] = useState<string>('blue');
+const demoProps = {
+    bg: 'var(--mantine-color-blue-light)',
+    mt: 'md',
+  };
+
+
+function logla(ev, renk) {
+  const node : HTMLElement = ev.target as HTMLElement
+  node.contains(other)
+	const parentNode = node.parentNode as HTMLElement
+	const tablo = parentNode.closest("table") as HTMLElement
+	const childrens = parentNode.children as HTMLCollection
+	childrens[0].style.backgroundColor=renk
+	const index = Array.from(childrens).indexOf(node)
+	const theadtbody = tablo.children as HTMLCollection
+	const thead = theadtbody[0] as HTMLElement
+	const theadtr = thead.children[0] as HTMLElement
+	const theadtrths = theadtr.children as HTMLCollection
+	const hlTh = theadtrths[index] as HTMLElement
+
+
+	//console.log(tbody)
+	//const hlTh = theadtr[index] as HTMLElement
+	//console.log(hlTh)
+	hlTh.style.backgroundColor=renk
+}
+
+function Kutu({yazi, renk}:{yazi:string, renk:string}) {
+	const [kutuRenk, setkutuRenk] = useState<string>(renk)
+	return (
+	<Table.Td style={{ borderStyle: 'solid', borderWidth:'1px', width: '50px', height:'50px' }}  onMouseOver={(event)=>logla(event, "yellow")} onMouseOut={(event)=>logla(event, "white")}>
+		{yazi}
+			</Table.Td>)}
+
+  return ( 
+  <Container size="xl" {...demoProps}>
+  <Paper>
+  <Table style={{ width: 'auto' }} ef={ref}>
+      <Table.Thead>
+      	<Table.Tr>
+	<Table.Th></Table.Th>
+	{data?.salonlar?.map(salon => (
+	  <Table.Th>{salon?.salonAdi}</Table.Th>))
+	}
+	</Table.Tr>
+
+      </Table.Thead>
+      <Table.Tbody>
+	{data?.oturumlar?.map(oturum => (
+
+      	<Table.Tr>
+		<Table.Td>{moment.tz([oturum?.yil, oturum?.ay, oturum?.gun, oturum?.saat, oturum?.dakika], "Europe/Istanbul").format("DD-MM-YYYY dddd HH:mm")}</Table.Td>
+		{data?.salonlar?.map(salon => (
+		<Kutu yazi={salon!.salonAdi} renk={renk} />))}
+
+	</Table.Tr>	
+
+	  ))
+	}
+      </Table.Tbody>
+    </Table>
+</Paper>
+</Container>
+  );
+}
+export default App;

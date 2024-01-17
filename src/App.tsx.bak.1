@@ -1,0 +1,146 @@
+import React,{useState, useEffect} from 'react';
+import logo from './logo.svg';
+import { Container, Table, Paper } from '@mantine/core';
+import { Button, SegmentedControl } from '@mantine/core';
+import { Oturum,useGetPostsQuery } from './app/services/users'
+import axios, {isCancel, AxiosError} from 'axios';
+import moment from 'moment-timezone';
+import 'moment/locale/tr';
+
+console.log(moment.locale()); // en
+moment.locale("tr");
+
+type SegmentedControlItem = { label : string, value: string }
+type StateTip<T> = React.Dispatch<React.SetStateAction<T>>
+type SegmentedControl = { label : string, value: string, renk:string } | null
+
+
+export type Salon = {
+	id : string,
+	salonAdi : string,
+	kapasite : number
+} | null
+export type Oturumm = {
+	id : string;
+   	gun: number ;
+   	ay : number;
+   	yil : number;
+   	saat : number;
+   	dakika : number;
+} | null
+
+export type Tablo = {
+	salonlar : Salon[] | null;
+	oturumlar : Oturumm[] | null;
+}
+const elements = [
+  { position: 6, mass: 12.011, symbol: 'C', name: 'Carbon' },
+  { position: 7, mass: 14.007, symbol: 'N', name: 'Nitrogen' },
+  { position: 39, mass: 88.906, symbol: 'Y', name: 'Yttrium' },
+  { position: 56, mass: 137.33, symbol: 'Ba', name: 'Barium' },
+  { position: 58, mass: 140.12, symbol: 'Ce', name: 'Cerium' },
+];
+
+function App() {
+const [bolumler, setBolumler] = useState<SegmentedControl[]>([{label:'', value:'', renk:''}]);
+const [bolum, setBolum] = useState<string>('')
+const [renk, setRenk] = useState<string>('blue');
+const [salonlar, setSalonlar] = useState<Tablo>({salonlar:null, oturumlar:null});
+const demoProps = {
+    bg: 'var(--mantine-color-blue-light)',
+    mt: 'md',
+  };
+
+function ayarla (bolum, renk) {
+	setBolum(bolum)
+	setRenk(renk)
+}	
+async function fetchData<T>(endPoint: string, fn: React.Dispatch<React.SetStateAction<T>>) {
+    try {
+    // const data: GetUsersResponse
+    const { data, status } = await axios.get(
+      `http://localhost:3000/${endPoint}`,
+      {
+        headers: {
+          Accept: 'application/json',
+        },
+      },
+    );
+
+    console.log(JSON.stringify(data, null, 4));
+    fn(data)
+
+    // 👇️ "response status is: 200"
+    console.log('response status is: ', status);
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.log('error message: ', error.message);
+      return error.message;
+    } else {
+      console.log('unexpected error: ', error);
+      return 'An unexpected error occurred';
+    }
+  }
+
+
+}
+
+function Kutu({yazi, renk}) {
+	const [kutuRenk, setkutuRenk] = useState<string>(renk)
+	return (
+	<Table.Td>
+		<Button size="xs" variant="filled" color={kutuRenk}>{yazi}</Button>
+			</Table.Td>)}
+
+function log(a:any) {
+	console.log(a)
+	}
+	
+useEffect(() => {
+ fetchData<Tablo>('users', setSalonlar)
+ fetchData<SegmentedControl[]>('bolumler', setBolumler)
+
+}, []);
+
+console.log(salonlar)
+
+  return (
+  salonlar && ( 
+  <Container size="xl" {...demoProps}>
+  <Paper>
+  <SegmentedControl
+      color={renk}
+      value={bolum}
+      onChange={(value: string) => {setBolum(value); setRenk(bolumler.filter((val) => val.value==value)[0].renk); console.log(value)}}
+      data={bolumler.map((obj) => ({label: obj!.label, value: obj!.value}))}
+    />
+  <Table>
+      <Table.Thead>
+      	<Table.Tr>
+	<Table.Th></Table.Th>
+	{salonlar.salonlar?.map(salon => (
+	  <Table.Th>{salon.salonAdi}</Table.Th>))
+	}
+	</Table.Tr>
+
+      </Table.Thead>
+      <Table.Tbody>
+	{salonlar.oturumlar?.map(oturum => (
+
+      	<Table.Tr>
+		<Table.Td>{moment.tz([oturum?.yil, oturum?.ay, oturum?.gun, oturum?.saat, oturum?.dakika], "Europe/Istanbul").format("DD-MM-YYYY dddd HH:mm")}</Table.Td>
+		{salonlar.salonlar?.map(salon => (
+		<Kutu yazi={salon.salonAdi} renk={renk} />))}
+
+	</Table.Tr>	
+
+	  ))
+	}
+      </Table.Tbody>
+    </Table>
+</Paper>
+</Container>
+    )
+  );
+}
+export default App;

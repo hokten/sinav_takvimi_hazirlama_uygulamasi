@@ -1,0 +1,63 @@
+import React, { useState } from 'react';
+import Paper from "@mui/material/Paper"; 
+import Stack from '@mui/material/Stack';
+import { styled } from '@mui/material/styles';
+import { nanoid } from 'nanoid'
+import { useAppSelector, useAppDispatch } from '../../app/hooks';
+import {  selectBbar, bolumuEtkinlestir} from './bbarSlice';
+import styles from './Counter.module.css';
+import * as moment from "moment";
+import {
+  Oturum,
+  useGetPostsQuery,
+} from '../../app/services/users'
+
+
+
+
+
+
+
+
+
+const Item = styled(Paper)(({ theme }) => ({
+  backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
+  ...theme.typography.body2,
+  padding: theme.spacing(1),
+  textAlign: 'center',
+  color: theme.palette.text.secondary,
+}));
+
+interface IBolumKutu {
+	id : string,
+	kisaltma : string,
+	arkaplan : string,
+	etkin : boolean
+}
+
+export function BolumKutu({id, kisaltma, arkaplan, etkin}:IBolumKutu) {
+const { data: posts, isLoading } = useGetPostsQuery()
+
+	console.log(posts);
+	let bgcolor = etkin ? arkaplan : "white";
+  const dispatch = useAppDispatch();
+  	return (
+	<Item id={id} onClick={() => {dispatch(bolumuEtkinlestir(id))}} sx={{ height: 20, backgroundColor:bgcolor  }}>{kisaltma}</Item>
+	)
+	}
+export function BolumBar() {
+  const bolumler = useAppSelector(selectBbar);
+
+return (
+	<div>
+	<Stack padding={4} direction="row" spacing={2}>
+	{bolumler.map(bolum => (
+		<BolumKutu id={bolum.id} kisaltma={bolum.bolumKodu} arkaplan={bolum.renk} etkin={bolum.etkin} />
+	))}
+	</Stack>
+	</div>
+	      )
+	     }
+
+
+
